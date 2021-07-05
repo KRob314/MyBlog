@@ -123,6 +123,7 @@ namespace MyBlog.Data
 
         public async Task<BlogPost> SaveBlogPostAsync(BlogPost item)
         {
+            var a = "";
             return (await SaveItem(item)) as BlogPost;
         }
 

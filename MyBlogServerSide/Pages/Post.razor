@@ -1,6 +1,7 @@
 ﻿@page "/post/{BlogPostId:int}"
 @inject IMyBlogApi api
 @inject NavigationManager navman
+@using Markdig
 
 @if (BlogPost != null)
 
@@ -9,21 +10,23 @@
 
     @*<Meta property="og:title" content="@BlogPost.Title" />
 
-    <Meta property="og:description" content="@(new string(BlogPost.Text.Take(100).ToArray()))" />
+        <Meta property="og:description" content="@(new string(BlogPost.Text.Take(100).ToArray()))" />
 
-    <Meta property="og:image" content="@($"{navman.BaseUri}/pathtoanimage.png")" />
+        <Meta property="og:image" content="@($"{navman.BaseUri}/pathtoanimage.png")" />
 
-    <Meta property="og:url" content="@navman.Uri" />
+        <Meta property="og:url" content="@navman.Uri" />
 
-    <Meta name="twitter:card" content="@(new string(BlogPost.Text.Take(100).ToArray()))" />*@
+        <Meta name="twitter:card" content="@(new string(BlogPost.Text.Take(100).ToArray()))" />*@
 
     <h3>@BlogPost.Title</h3>
 
-    @((MarkupString)BlogPost.Text)
+    @((MarkupString)Markdig.Markdown.ToHtml(BlogPost.Text, pipeline))
 
 }
 
 @code {
+    MarkdownPipeline pipeline;
+
     [Parameter]
     public int BlogPostId { get; set; }
 
@@ -35,5 +38,9 @@
         await base.OnParametersSetAsync();
     }
 
-
+    protected override Task OnInitializedAsync()
+    {
+        pipeline = new MarkdownPipelineBuilder().UseEmojiAndSmiley().Build();
+        return base.OnInitializedAsync();
+    }
 }
