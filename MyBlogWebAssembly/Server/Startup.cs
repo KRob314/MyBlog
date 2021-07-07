@@ -2,9 +2,12 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using MyBlog.Data;
+using MyBlog.Data.Interfaces;
 using System.Linq;
 
 namespace MyBlogWebAssembly.Server
@@ -25,6 +28,8 @@ namespace MyBlogWebAssembly.Server
 
             services.AddControllersWithViews();
             services.AddRazorPages();
+            services.AddDbContextFactory<MyBlogDbContext>(opt => opt.UseSqlite($"Data Source=../../MyBlog.db"));
+            services.AddScoped<IMyBlogApi, MyBlogApiServerSide>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
