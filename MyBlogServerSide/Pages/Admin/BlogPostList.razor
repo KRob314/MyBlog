@@ -1,4 +1,5 @@
-﻿@page "/admin/blogposts"
+﻿@attribute [Authorize]
+@page "/admin/blogposts"
 @inject IMyBlogApi api
 
 <a href="/admin/blogposts/new">New blog post</a>
@@ -17,7 +18,7 @@
 
     private async ValueTask<ItemsProviderResult<BlogPost>> LoadPosts(ItemsProviderRequest request)
     {
-        if(TotalBlogPosts == 0)
+        if (TotalBlogPosts == 0)
         {
             TotalBlogPosts = await api.GetBlogPostCountAsync();
         }
