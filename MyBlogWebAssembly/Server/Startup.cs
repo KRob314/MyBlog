@@ -9,6 +9,10 @@ using Microsoft.Extensions.Hosting;
 using MyBlog.Data;
 using MyBlog.Data.Interfaces;
 using System.Linq;
+using MyBlog.Data.Models;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Identity;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace MyBlogWebAssembly.Server
 {
@@ -25,11 +29,35 @@ namespace MyBlogWebAssembly.Server
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddDbContextFactory<MyBlogDbContext>(opt => opt.UseSqlite(Configuration.GetConnectionString("MyBlogDB")));
+            services.AddScoped<IMyBlogApi, MyBlogApiServerSide>();
+            //</AddMyBlogDataServices>
+
+            //<Identity>
+            services.AddDbContext<MyBlogDbContext>(opt => opt.UseSqlite(Configuration.GetConnectionString("MyBlogDB")));
+
+            services.AddDefaultIdentity<AppUser>(options => options.SignIn.RequireConfirmedAccount = false)
+                .AddRoles<IdentityRole>()
+                .AddEntityFrameworkStores<MyBlogDbContext>();
+
+            services.AddIdentityServer()
+                .AddApiAuthorization<AppUser, MyBlogDbContext>(options =>
+                {
+                    options.IdentityResources["openid"].UserClaims.Add("name");
+                    options.ApiResources.Single().UserClaims.Add("name");
+                    options.IdentityResources["openid"].UserClaims.Add("role");
+                    options.ApiResources.Single().UserClaims.Add("role");
+                });
+            JwtSecurityTokenHandler.DefaultInboundClaimFilter.Remove("role");
+
+            services.AddAuthentication()
+                .AddIdentityServerJwt();
+
+            services.AddDatabaseDeveloperPageExceptionFilter();
+            //</Identity>
 
             services.AddControllersWithViews();
             services.AddRazorPages();
-            services.AddDbContextFactory<MyBlogDbContext>(opt => opt.UseSqlite($"Data Source=../../MyBlog.db"));
-            services.AddScoped<IMyBlogApi, MyBlogApiServerSide>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -52,6 +80,10 @@ namespace MyBlogWebAssembly.Server
             app.UseStaticFiles();
 
             app.UseRouting();
+
+            app.UseIdentityServer();
+            app.UseAuthentication();
+            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
